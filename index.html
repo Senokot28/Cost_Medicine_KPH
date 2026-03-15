@@ -1190,12 +1190,18 @@ function populateDoctorDropdown() {
 }
 
 function updateT2() {
-  const rows     = getFilteredT2();
-  const edRows   = rows.filter(r => isED(r));
-  const nedRows  = rows.filter(r => isNED(r));
-  const total    = aggregateCost(rows);
-  const edCost   = aggregateCost(edRows);
-  const nedCost  = aggregateCost(nedRows);
+  const rows = getFilteredT2();  // filter ทุกอย่าง → ใช้กับ D1, D3, D4
+
+  // D2 ไม่ filter drugtype เพื่อให้ donut แสดงสัดส่วน ED/NED จริงเสมอ
+  const rowsForDonut = rawData.filter(r => {
+    if (currentDep !== 'ALL' && r[C_DEP] !== currentDep) return false;
+    if (t2Pttype !== 'ALL' && r[C_PTTYPE] !== t2Pttype) return false;
+    if (t2Doctor !== 'ALL' && (r[C_DOCTOR] || '').trim() !== t2Doctor) return false;
+    return true;
+  });
+  const edCost  = aggregateCost(rowsForDonut.filter(r => isED(r)));
+  const nedCost = aggregateCost(rowsForDonut.filter(r => isNED(r)));
+  const total   = aggregateCost(rows);
 
   // ── D1: doctor banner ──
   document.getElementById('t2-d1-name').textContent =
@@ -1203,13 +1209,15 @@ function updateT2() {
   document.getElementById('t2-d1-rows').textContent =
     `${rows.length.toLocaleString()} รายการ`;
 
-  // ── D3: total cost + ED/NED breakdown ──
+  // ── D3: total cost + ED/NED breakdown (ตาม filter จริงรวม drugtype) ──
+  const d3EdCost  = aggregateCost(rows.filter(r => isED(r)));
+  const d3NedCost = aggregateCost(rows.filter(r => isNED(r)));
   document.getElementById('t2-d3-value').innerHTML =
     fmtTHB(total) + '<span class="total-unit"> บาท</span>';
   document.getElementById('t2-d3-sub').textContent =
     `${rows.length.toLocaleString()} รายการยา`;
-  document.getElementById('t2-d3-ed').textContent  = fmtTHB(edCost);
-  document.getElementById('t2-d3-ned').textContent = fmtTHB(nedCost);
+  document.getElementById('t2-d3-ed').textContent  = fmtTHB(d3EdCost);
+  document.getElementById('t2-d3-ned').textContent = fmtTHB(d3NedCost);
 
   // ── D2: donut ED / NED ──
   const donutData   = [edCost, nedCost];
