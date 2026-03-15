@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>มูลค่าการสั่งยา รพ.กำแพงเพชร</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <style>
+    /* ─── Base ─── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    /* ─── T1-0: Header ─── */
+    #t1-0 {
+      background: linear-gradient(135deg, #0f2c5c 0%, #1d4ed8 100%);
+      color: #fff;
+      padding: 18px 28px 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    #t1-0 h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+    }
+    #t1-0 .t1-0-sub {
+      font-size: 0.82rem;
+      opacity: 0.82;
+      margin-left: auto;
+      text-align: right;
+      line-height: 1.6;
+    }
+    #t1-0 .t1-0-sub strong { opacity: 1; font-size: 0.88rem; }
+
+    /* ─── Global filter bar ─── */
+    #global-filter {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .filter-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .btn-filter {
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 5px 16px;
+      border-radius: 20px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+      transition: all .15s;
+      outline: none;
+    }
+    .btn-filter:hover { border-color: #2563eb; color: #2563eb; }
+    .btn-filter.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(37,99,235,.35);
+    }
+    .filter-summary {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    /* ─── Loading ─── */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      gap: 16px;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: #64748b; font-size: 0.9rem; margin: 0; }
+
+    /* ─── Dashboard content ─── */
+    #dashboard-content {
+      padding: 18px 20px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ─── T1-2: KPI Cards ─── */
+    #t1-2 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) { #t1-2 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { #t1-2 { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 18px 14px;
+      border-top: 4px solid #cbd5e1;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      cursor: pointer;
+      transition: box-shadow .18s, transform .18s, border-color .18s;
+      user-select: none;
+    }
+    .kpi-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.12); transform: translateY(-2px); }
+    .kpi-card.active {
+      box-shadow: 0 4px 18px rgba(0,0,0,.18);
+      transform: translateY(-2px);
+    }
+    .kpi-card[data-pttype="UC"]  { border-top-color: #16a34a; }
+    .kpi-card[data-pttype="SSO"] { border-top-color: #2563eb; }
+    .kpi-card[data-pttype="SKS"] { border-top-color: #7c3aed; }
+    .kpi-card[data-pttype="ALL"] { border-top-color: #64748b; }
+    .kpi-card[data-pttype="UC"].active  { box-shadow: 0 4px 18px rgba(22,163,74,.25); }
+    .kpi-card[data-pttype="SSO"].active { box-shadow: 0 4px 18px rgba(37,99,235,.25); }
+    .kpi-card[data-pttype="SKS"].active { box-shadow: 0 4px 18px rgba(124,58,237,.25); }
+    .kpi-card[data-pttype="ALL"].active { box-shadow: 0 4px 18px rgba(100,116,139,.25); }
+
+    .kpi-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      letter-spacing: .03em;
+    }
+    .kpi-card[data-pttype="UC"]  .kpi-badge { background: #dcfce7; color: #15803d; }
+    .kpi-card[data-pttype="SSO"] .kpi-badge { background: #dbeafe; color: #1d4ed8; }
+    .kpi-card[data-pttype="SKS"] .kpi-badge { background: #ede9fe; color: #6d28d9; }
+    .kpi-card[data-pttype="ALL"] .kpi-badge { background: #f1f5f9; color: #475569; }
+
+    .kpi-title {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .kpi-unit { font-size: 0.7rem; font-weight: 400; color: #94a3b8; margin-left: 2px; }
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .kpi-hint {
+      font-size: 0.68rem;
+      color: #cbd5e1;
+      margin-top: 6px;
+    }
+
+    /* ─── T1-3: Charts row ─── */
+    #t1-3 {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) {
+      #t1-3 { grid-template-columns: 1fr; }
+      #t1-3a-wrap { order: 2; }
+      #t1-3b-wrap { order: 1; }
+    }
+
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .chart-card-header {
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-card-header .section-id {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+    .chart-card-body { padding: 14px 16px; }
+
+    #t1-3a-wrap .chart-card-body { padding: 10px 16px 16px; }
+    #t1-3a-canvas-wrap { position: relative; height: 260px; }
+
+    #t1-3b-canvas-wrap { position: relative; height: 380px; }
+
+    /* ─── T1-4: Top 20 Table ─── */
+    #t1-4 {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    #t1-4 .chart-card-header { border-bottom: 1px solid #f1f5f9; }
+    #t1-4 table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    #t1-4 thead th {
+      background: #f8fafc;
+      padding: 9px 14px;
+      font-weight: 600;
+      font-size: 0.76rem;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    #t1-4 tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+    #t1-4 tbody tr:last-child { border-bottom: none; }
+    #t1-4 tbody tr:hover { background: #f8fafc; }
+    #t1-4 tbody td { padding: 8px 14px; color: #1e293b; vertical-align: middle; }
+    #t1-4 .rank { color: #cbd5e1; font-weight: 700; font-size: 0.75rem; text-align: center; width: 36px; }
+    #t1-4 .rank.top3 { color: #f59e0b; }
+    #t1-4 .doctor-name { font-weight: 500; }
+    #t1-4 .cost-val { text-align: right; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; }
+    #t1-4 .cost-short { text-align: right; color: #94a3b8; font-size: 0.76rem; width: 70px; font-variant-numeric: tabular-nums; }
+    #t1-4 .pttype-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .pct-bar-wrap { width: 80px; }
+    .pct-bar-bg { background: #f1f5f9; border-radius: 4px; height: 6px; overflow: hidden; }
+    .pct-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      #t1-0 { padding: 14px 16px; }
+      #t1-0 h1 { font-size: 1.1rem; }
+      #t1-0 .t1-0-sub { text-align: left; margin-left: 0; width: 100%; }
+      #global-filter { padding: 8px 16px; }
+      #dashboard-content { padding: 12px 12px 24px; }
+      .pct-bar-wrap { display: none; }
+    }
+
+    /* ─── Active filter indicator on charts ─── */
+    .active-filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: auto;
+    }
+    .af-uc  { background: #dcfce7; color: #15803d; }
+    .af-sso { background: #dbeafe; color: #1d4ed8; }
+    .af-sks { background: #ede9fe; color: #6d28d9; }
+    .af-all { background: #f1f5f9; color: #475569; }
+    .af-dep { background: #fff7ed; color: #c2410c; margin-left: 4px; }
+    .af-ed  { background: #dcfce7; color: #15803d; margin-left: 4px; }
+    .af-ned { background: #fef3c7; color: #92400e; margin-left: 4px; }
+
+    /* ─── Sub-cards ED/NED ─── */
+    .kpi-sub-row { display:flex; gap:6px; margin-top:10px; }
+    .kpi-sub-card {
+      flex: 1; padding: 6px 8px; border-radius: 8px; cursor: pointer;
+      background: #f8fafc; border: 1.5px solid #e2e8f0; font-size: .72rem;
+      transition: all .15s; text-align: left;
+    }
+    .kpi-sub-card:hover { background: #f0f9ff; border-color: #93c5fd; }
+    .kpi-sub-card.active { background: #eff6ff; border-color: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,.2); }
+    .sub-label { display: block; color: #64748b; font-weight: 600; font-size: .68rem; }
+    .sub-val   { display: block; font-weight: 700; color: #0f172a; font-size: .82rem; margin-top: 1px; }
+    .sub-id    { font-family: monospace; font-size: .55rem; color: #cbd5e1; }
+
+    /* ─── Tab navigation ─── */
+    #tab-nav {
+      background: #fff;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 0 24px;
+      display: flex;
+      gap: 4px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      font-family: 'Sarabun', sans-serif;
+      border: none;
+      background: none;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all .15s;
+    }
+    .tab-btn:hover { color: #1d4ed8; }
+    .tab-btn.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .tab-id { font-family: monospace; font-size: .62rem; color: #94a3b8; margin-left: 4px; }
+
+    /* ─── T2 filter bar ─── */
+    .t2-filter-bar {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .t2-filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .t2-filter-label { font-size: .75rem; font-weight: 600; color: #94a3b8; white-space: nowrap; }
+    .t2-filter-divider { width: 1px; height: 24px; background: #e2e8f0; }
+
+    /* ─── T2 doctor display ─── */
+    #t2-d1 {
+      background: linear-gradient(135deg, #0f2c5c 0%, #1d4ed8 100%);
+      color: #fff;
+      padding: 14px 24px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #t2-d1 .t2-doctor-name { font-size: 1.2rem; }
+    #t2-d1 .t2-row-count { font-size: .8rem; opacity: .75; margin-left: auto; }
+
+    /* ─── T2 content grid ─── */
+    #t2-d2d3 {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 700px) { #t2-d2d3 { grid-template-columns: 1fr; } }
+
+    /* T2 total card */
+    #t2-d3 {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #t2-d3 .total-label { font-size: .8rem; color: #64748b; font-weight: 600; }
+    #t2-d3 .total-value { font-size: 2rem; font-weight: 700; color: #0f172a; line-height: 1.2; margin-top: 4px; }
+    #t2-d3 .total-unit  { font-size: .9rem; font-weight: 400; color: #64748b; }
+    #t2-d3 .total-sub   { font-size: .8rem; color: #94a3b8; margin-top: 8px; }
+
+    /* T2 doctor dropdown */
+    #t2-f4-select {
+      padding: 6px 10px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-family: 'Sarabun', sans-serif;
+      color: #374151;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      max-width: 280px;
+    }
+    #t2-f4-select:focus { border-color: #2563eb; }
+
+    /* T2 canvas */
+    #t2-d2-wrap { position: relative; height: 260px; }
+  </style>
+</head>
+<body>
+
+<div id="debug-bar" style="position:fixed;top:0;left:0;right:0;background:#1d4ed8;color:white;padding:6px 16px;font-size:13px;z-index:9999;font-family:sans-serif;">
+  กำลังโหลด...
+</div>
+<div style="height:32px;"></div>
+
+<!-- ═══════════════ T1-0: HEADER ═══════════════ -->
+<div id="t1-0">
+  <div>
+    <div style="font-size:.7rem;opacity:.6;margin-bottom:2px;letter-spacing:.05em;">DRUG COST DASHBOARD &nbsp;<span style="background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;">T0</span></div>
+    <h1>มูลค่าการสั่งยา โรงพยาบาลกำแพงเพชร</h1>
+  </div>
+  <div class="t1-0-sub">
+    <strong id="t1-0-date">กำลังโหลด…</strong><br>
+    <span id="t1-0-rows"></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════ LOADING ═══════════════ -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p>กำลังโหลดข้อมูล กรุณารอสักครู่…</p>
+  <p id="loading-detail" style="font-size:.75rem;"></p>
+</div>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="dashboard-content" style="display:none;">
+
+<!-- ═══════════════ TAB NAV (บนสุด) ═══════════════ -->
+<div id="tab-nav">
+  <button class="tab-btn active" data-tab="page-t1">📊 ภาพรวม <span class="tab-id">T1</span></button>
+  <button class="tab-btn" data-tab="page-t2">🔍 รายละเอียด <span class="tab-id">T2</span></button>
+</div>
+
+<!-- ═══════════════ GLOBAL FILTER (dep) ═══════════════ -->
+<div id="global-filter">
+  <span class="filter-label">ข้อมูล :</span>
+  <button class="btn-filter active" data-dep="ALL">ทั้งหมด</button>
+  <button class="btn-filter" data-dep="OPD">OPD</button>
+  <button class="btn-filter" data-dep="IPD">IPD</button>
+  <span class="filter-summary" id="t1-1-summary"></span>
+</div>
+
+<!-- ══════════ PAGE T1 ══════════ -->
+<div id="page-t1">
+
+  <!-- T1-2: KPI CARDS -->
+  <div id="t1-2">
+
+    <!-- UC -->
+    <div class="kpi-card" data-pttype="UC" id="kpi-card-UC">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="kpi-badge">UC</div>
+        <span style="font-family:monospace;font-size:.6rem;color:#cbd5e1;">T2-01</span>
+      </div>
+      <div class="kpi-title">บัตรทอง (สิทธิ์ UC)</div>
+      <div class="kpi-value" id="kpi-val-UC">—<span class="kpi-unit">บาท</span></div>
+      <div class="kpi-sub" id="kpi-pct-UC">—</div>
+      <div class="kpi-sub-row">
+        <div class="kpi-sub-card" data-pttype="UC" data-drugtype="ED" id="t2-01-01">
+          <span class="sub-label">ED ยาในบัญชี</span>
+          <span class="sub-val" id="kpi-ed-UC">—</span>
+          <span class="sub-id">T2-01-01</span>
+        </div>
+        <div class="kpi-sub-card" data-pttype="UC" data-drugtype="NED" id="t2-01-02">
+          <span class="sub-label">NED ยานอกบัญชี</span>
+          <span class="sub-val" id="kpi-ned-UC">—</span>
+          <span class="sub-id">T2-01-02</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SKS -->
+    <div class="kpi-card" data-pttype="SKS" id="kpi-card-SKS">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="kpi-badge">SKS</div>
+        <span style="font-family:monospace;font-size:.6rem;color:#cbd5e1;">T2-02</span>
+      </div>
+      <div class="kpi-title">เบิกได้ (ข้าราชการ)</div>
+      <div class="kpi-value" id="kpi-val-SKS">—<span class="kpi-unit">บาท</span></div>
+      <div class="kpi-sub" id="kpi-pct-SKS">—</div>
+      <div class="kpi-sub-row">
+        <div class="kpi-sub-card" data-pttype="SKS" data-drugtype="ED" id="t2-02-01">
+          <span class="sub-label">ED ยาในบัญชี</span>
+          <span class="sub-val" id="kpi-ed-SKS">—</span>
+          <span class="sub-id">T2-02-01</span>
+        </div>
+        <div class="kpi-sub-card" data-pttype="SKS" data-drugtype="NED" id="t2-02-02">
+          <span class="sub-label">NED ยานอกบัญชี</span>
+          <span class="sub-val" id="kpi-ned-SKS">—</span>
+          <span class="sub-id">T2-02-02</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SSO -->
+    <div class="kpi-card" data-pttype="SSO" id="kpi-card-SSO">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="kpi-badge">SSO</div>
+        <span style="font-family:monospace;font-size:.6rem;color:#cbd5e1;">T2-03</span>
+      </div>
+      <div class="kpi-title">ประกันสังคม</div>
+      <div class="kpi-value" id="kpi-val-SSO">—<span class="kpi-unit">บาท</span></div>
+      <div class="kpi-sub" id="kpi-pct-SSO">—</div>
+      <div class="kpi-sub-row">
+        <div class="kpi-sub-card" data-pttype="SSO" data-drugtype="ED" id="t2-03-01">
+          <span class="sub-label">ED ยาในบัญชี</span>
+          <span class="sub-val" id="kpi-ed-SSO">—</span>
+          <span class="sub-id">T2-03-01</span>
+        </div>
+        <div class="kpi-sub-card" data-pttype="SSO" data-drugtype="NED" id="t2-03-02">
+          <span class="sub-label">NED ยานอกบัญชี</span>
+          <span class="sub-val" id="kpi-ned-SSO">—</span>
+          <span class="sub-id">T2-03-02</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL -->
+    <div class="kpi-card active" data-pttype="ALL" id="kpi-card-ALL">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="kpi-badge">รวม</div>
+        <span style="font-family:monospace;font-size:.6rem;color:#cbd5e1;">T2-04</span>
+      </div>
+      <div class="kpi-title">มูลค่ารวมทั้งหมด</div>
+      <div class="kpi-value" id="kpi-val-ALL">—<span class="kpi-unit">บาท</span></div>
+      <div class="kpi-sub" id="kpi-pct-ALL">—</div>
+      <div class="kpi-sub-row">
+        <div class="kpi-sub-card" data-pttype="ALL" data-drugtype="ED" id="t2-04-01">
+          <span class="sub-label">ED ยาในบัญชี</span>
+          <span class="sub-val" id="kpi-ed-ALL">—</span>
+          <span class="sub-id">T2-04-01</span>
+        </div>
+        <div class="kpi-sub-card" data-pttype="ALL" data-drugtype="NED" id="t2-04-02">
+          <span class="sub-label">NED ยานอกบัญชี</span>
+          <span class="sub-val" id="kpi-ned-ALL">—</span>
+          <span class="sub-id">T2-04-02</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#t1-2 -->
+
+  <!-- T1-3: CHARTS ROW -->
+  <div id="t1-3">
+
+    <!-- T1-3a: Donut -->
+    <div id="t1-3a-wrap" class="chart-card">
+      <div class="chart-card-header">
+        <span class="section-id">T1-3a</span>
+        สัดส่วนมูลค่ายาตามสิทธิ์
+        <span class="active-filter-tag af-dep" id="t1-3a-dep-tag" style="display:none;"></span>
+      </div>
+      <div class="chart-card-body">
+        <div id="t1-3a-canvas-wrap">
+          <canvas id="t1-3a-donut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- T1-3b: Bar Top 15 -->
+    <div id="t1-3b-wrap" class="chart-card">
+      <div class="chart-card-header">
+        <span class="section-id">T1-3b</span>
+        <span id="t1-3b-title">Top 15 แพทย์ มูลค่ายาสูงสุด</span>
+        <span class="active-filter-tag" id="t1-3b-pt-tag" style="display:none;"></span>
+        <span class="active-filter-tag" id="t1-3b-dt-tag" style="display:none;"></span>
+        <span class="active-filter-tag af-dep" id="t1-3b-dep-tag" style="display:none;"></span>
+      </div>
+      <div class="chart-card-body">
+        <div id="t1-3b-canvas-wrap">
+          <canvas id="t1-3b-bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#t1-3 -->
+
+  <!-- T1-4: Top 20 Table -->
+  <div id="t1-4">
+    <div class="chart-card-header">
+      <span class="section-id">T1-4</span>
+      <span id="t1-4-title">Top 20 แพทย์ มูลค่ายา</span>
+      <span class="active-filter-tag" id="t1-4-pt-tag" style="display:none;"></span>
+      <span class="active-filter-tag" id="t1-4-dt-tag" style="display:none;"></span>
+      <span class="active-filter-tag af-dep" id="t1-4-dep-tag" style="display:none;"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="t1-4-table">
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th>ชื่อแพทย์</th>
+            <th style="text-align:right;">มูลค่า (บาท)</th>
+            <th style="text-align:right;width:70px;">สั้น</th>
+            <th style="width:100px;">สัดส่วน</th>
+          </tr>
+        </thead>
+        <tbody id="t1-4-tbody">
+          <tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">กำลังโหลด…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /#t1-4 -->
+
+</div><!-- /#page-t1 -->
+
+<!-- ══════════ PAGE T2 ══════════ -->
+<div id="page-t2" style="display:none;">
+
+  <!-- T2 Filter bars -->
+  <div class="t2-filter-bar">
+    <span style="font-family:monospace;font-size:.68rem;color:#94a3b8;">T2-F2</span>
+    <div class="t2-filter-group">
+      <span class="t2-filter-label">สิทธิ์ :</span>
+      <button class="btn-filter active" id="t2-f2-all" data-pt2="ALL">ทั้งหมด</button>
+      <button class="btn-filter" id="t2-f2-uc" data-pt2="UC">UC</button>
+      <button class="btn-filter" id="t2-f2-sks" data-pt2="SKS">SKS</button>
+      <button class="btn-filter" id="t2-f2-sso" data-pt2="SSO">SSO</button>
+    </div>
+    <div class="t2-filter-divider"></div>
+    <span style="font-family:monospace;font-size:.68rem;color:#94a3b8;">T2-F3</span>
+    <div class="t2-filter-group">
+      <span class="t2-filter-label">บัญชียา :</span>
+      <button class="btn-filter active" id="t2-f3-all" data-dt2="ALL">ทั้งหมด</button>
+      <button class="btn-filter" id="t2-f3-ed" data-dt2="ED">ED ในบัญชี</button>
+      <button class="btn-filter" id="t2-f3-ned" data-dt2="NED">NED นอกบัญชี</button>
+    </div>
+    <div class="t2-filter-divider"></div>
+    <span style="font-family:monospace;font-size:.68rem;color:#94a3b8;">T2-F4</span>
+    <div class="t2-filter-group">
+      <span class="t2-filter-label">แพทย์ :</span>
+      <select id="t2-f4-select">
+        <option value="ALL">— ทุกแพทย์ —</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="t2-content" style="padding:18px 20px 32px;max-width:1400px;margin:0 auto;">
+
+    <!-- T2-D1: Doctor display -->
+    <div id="t2-d1">
+      <span>👨‍⚕️</span>
+      <span class="t2-doctor-name" id="t2-d1-name">ทุกแพทย์</span>
+      <span class="t2-row-count" id="t2-d1-rows"></span>
+    </div>
+
+    <!-- T2-D2 + T2-D3 -->
+    <div id="t2-d2d3" style="margin-top:14px;">
+
+      <!-- T2-D2: Donut ED/NED -->
+      <div class="chart-card" id="t2-d2-card">
+        <div class="chart-card-header">
+          <span class="section-id">T2-D2</span>
+          สัดส่วน ED / NED
+        </div>
+        <div class="chart-card-body">
+          <div id="t2-d2-wrap"><canvas id="t2-d2-donut"></canvas></div>
+        </div>
+      </div>
+
+      <!-- T2-D3: Total cost -->
+      <div id="t2-d3">
+        <div style="font-family:monospace;font-size:.6rem;color:#cbd5e1;margin-bottom:8px;">T2-D3</div>
+        <div class="total-label">มูลค่ายารวม (บาท)</div>
+        <div class="total-value" id="t2-d3-value">—<span class="total-unit"> บาท</span></div>
+        <div class="total-sub" id="t2-d3-sub"></div>
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;">
+            <div style="font-size:.7rem;color:#16a34a;font-weight:700;">ED ในบัญชี</div>
+            <div style="font-size:1rem;font-weight:700;color:#0f172a;margin-top:2px;" id="t2-d3-ed">—</div>
+          </div>
+          <div style="background:#fefce8;border-radius:8px;padding:10px 12px;">
+            <div style="font-size:.7rem;color:#92400e;font-weight:700;">NED นอกบัญชี</div>
+            <div style="font-size:1rem;font-weight:700;color:#0f172a;margin-top:2px;" id="t2-d3-ned">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /#t2-d2d3 -->
+
+    <!-- T2-D4: Top 20 drugs -->
+    <div id="t2-d4" class="chart-card">
+      <div class="chart-card-header">
+        <span class="section-id">T2-D4</span>
+        <span id="t2-d4-title">Top 20 ยามูลค่าสูงสุด</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:center;width:36px;">#</th>
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;">ชื่อยา</th>
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:center;width:60px;">ED/NED</th>
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:right;">จำนวน</th>
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:right;">มูลค่า (บาท)</th>
+              <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;width:90px;">%</th>
+            </tr>
+          </thead>
+          <tbody id="t2-d4-tbody">
+            <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">เลือกตัวกรองเพื่อดูข้อมูล</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /#t2-d4 -->
+
+  </div><!-- /#t2-content -->
+
+</div><!-- /#page-t2 -->
+
+</div><!-- /#dashboard-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONFIG — แก้ไขตรงนี้
+// ════════════════════════════════════════════════════════════════
+const DATA_FILE       = 'data.csv';
+const DATE_RANGE      = 'วันที่ 1 มีนาคม 2568 – 28 กุมภาพันธ์ 2569  (12 เดือน)';
+
+// ════════════════════════════════════════════════════════════════
+// COLUMN KEYS (ตาม header จริงในไฟล์ CSV)
+// ════════════════════════════════════════════════════════════════
+const C_DEP    = 'dep';
+const C_DOCTOR = 'dch_doctor_name';
+const C_PTTYPE = 'pttype';
+const C_COST   = 'Sum of sum_costprice (THB)';
+const C_TYPE   = 'type';
+const C_DRUG   = 'lookup_drugitems - icode → drug_name';
+const C_QTY    = 'Sum of qty';
+
+// ════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════════════
+const PTTYPE_ORDER  = ['UC', 'SKS', 'SSO'];
+const PTTYPE_COLORS = { UC: '#16a34a', SSO: '#2563eb', SKS: '#7c3aed' };
+const PTTYPE_LABEL  = { UC: 'UC (บัตรทอง)', SSO: 'SSO (ประกันสังคม)', SKS: 'SKS (เบิกได้)' };
+const PTTYPE_TAG_CLASS = { UC: 'af-uc', SSO: 'af-sso', SKS: 'af-sks', ALL: 'af-all' };
+
+// ════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════
+let rawData         = [];
+let currentDep      = 'ALL';
+let currentPtype    = 'ALL';
+let currentDrugtype = 'ALL';   // 'ALL' | 'ED' | 'NED'
+let chartDonut      = null;
+let chartBar        = null;
+
+// T2 state
+let t2Pttype    = 'ALL';
+let t2Drugtype  = 'ALL';
+let t2Doctor    = 'ALL';
+let chartT2Donut = null;
+
+// ════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+function parseCost(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  return parseFloat(String(v).replace(/,/g, '')) || 0;
+}
+
+function fmtTHB(v) {
+  return v.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtShort(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + ' ล.';
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + ' พ.';
+  return v.toFixed(0);
+}
+
+// ════════════════════════════════════════════════════════════════
+// DATA FILTERS
+// ════════════════════════════════════════════════════════════════
+function isED(r)  { return !!(r[C_TYPE] && r[C_TYPE].trim()); }
+function isNED(r) { return !r[C_TYPE] || !r[C_TYPE].trim(); }
+
+function getFiltered(dep, pttype, drugtype = 'ALL') {
+  return rawData.filter(r => {
+    if (dep !== 'ALL' && r[C_DEP] !== dep) return false;
+    if (pttype !== 'ALL' && r[C_PTTYPE] !== pttype) return false;
+    if (drugtype === 'ED'  && !isED(r))  return false;
+    if (drugtype === 'NED' && !isNED(r)) return false;
+    return true;
+  });
+}
+
+function aggregateCost(rows) {
+  return rows.reduce((s, r) => s + parseCost(r[C_COST]), 0);
+}
+
+function aggregateCostByDoctor(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const doc = (r[C_DOCTOR] || '').trim();
+    if (!doc) return; // ข้ามแถวที่ไม่มีชื่อแพทย์
+    const cost = parseCost(r[C_COST]);
+    map[doc] = (map[doc] || 0) + cost;
+  });
+  return Object.entries(map)
+    .map(([name, cost]) => ({ name, cost }))
+    .sort((a, b) => b.cost - a.cost);
+}
+
+function aggregateCostByPttype(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const pt   = r[C_PTTYPE] || 'อื่นๆ';
+    const cost = parseCost(r[C_COST]);
+    map[pt] = (map[pt] || 0) + cost;
+  });
+  return map;
+}
+
+// ════════════════════════════════════════════════════════════════
+// UPDATE FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+
+/** T1-2: KPI Cards */
+function updateKPIs() {
+  const rows      = getFiltered(currentDep, 'ALL');
+  const byPttype  = aggregateCostByPttype(rows);
+  const totalAll  = Object.values(byPttype).reduce((s, v) => s + v, 0);
+
+  PTTYPE_ORDER.forEach(pt => {
+    const v   = byPttype[pt] || 0;
+    const pct = totalAll > 0 ? (v / totalAll * 100).toFixed(1) : '0.0';
+    document.getElementById(`kpi-val-${pt}`).innerHTML =
+      fmtTHB(v) + '<span class="kpi-unit"> บาท</span>';
+    document.getElementById(`kpi-pct-${pt}`).textContent = `${pct}% ของมูลค่ารวม`;
+  });
+
+  document.getElementById('kpi-val-ALL').innerHTML =
+    fmtTHB(totalAll) + '<span class="kpi-unit"> บาท</span>';
+  document.getElementById('kpi-pct-ALL').textContent =
+    `${rows.length.toLocaleString()} รายการยา`;
+
+  // Summary in filter bar
+  document.getElementById('t1-1-summary').textContent =
+    `แสดง ${rows.length.toLocaleString()} / ${rawData.length.toLocaleString()} รายการ`;
+
+  // Sub-cards ED/NED (ไม่กรองตาม currentDrugtype — แสดงค่าจริงของแต่ละ pttype)
+  [...PTTYPE_ORDER, 'ALL'].forEach(pt => {
+    const edVal  = aggregateCost(getFiltered(currentDep, pt, 'ED'));
+    const nedVal = aggregateCost(getFiltered(currentDep, pt, 'NED'));
+    document.getElementById(`kpi-ed-${pt}`).textContent  = fmtShort(edVal);
+    document.getElementById(`kpi-ned-${pt}`).textContent = fmtShort(nedVal);
+  });
+}
+
+/** T1-3a: Donut */
+function updateDonut() {
+  const rows     = getFiltered(currentDep, 'ALL', currentDrugtype); // donut ไม่กรองตาม pttype
+  const byPttype = aggregateCostByPttype(rows);
+  const total    = Object.values(byPttype).reduce((s, v) => s + v, 0);
+
+  const labels = PTTYPE_ORDER;
+  const data   = PTTYPE_ORDER.map(pt => byPttype[pt] || 0);
+  const colors = PTTYPE_ORDER.map(pt => PTTYPE_COLORS[pt]);
+
+  // dep tag
+  const depTag = document.getElementById('t1-3a-dep-tag');
+  if (currentDep !== 'ALL') {
+    depTag.textContent = currentDep;
+    depTag.style.display = 'inline-flex';
+  } else {
+    depTag.style.display = 'none';
+  }
+
+  if (chartDonut) {
+    chartDonut.data.labels                    = labels;
+    chartDonut.data.datasets[0].data          = data;
+    chartDonut.data.datasets[0].backgroundColor = colors;
+    chartDonut.update();
+    return;
+  }
+
+  chartDonut = new Chart(document.getElementById('t1-3a-donut'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderWidth: 3,
+        borderColor: '#fff',
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { family: 'Sarabun', size: 12 },
+            padding: 12,
+            usePointStyle: true,
+            pointStyleWidth: 10,
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              const pct = total > 0 ? (ctx.parsed / total * 100).toFixed(1) : '0';
+              return ` ${ctx.label}: ${fmtTHB(ctx.parsed)} บาท (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/** T1-3b: Bar Top 15 */
+function updateBar() {
+  const rows   = getFiltered(currentDep, currentPtype, currentDrugtype);
+  const byDoc  = aggregateCostByDoctor(rows).slice(0, 15);
+
+  const labels    = byDoc.map(d => d.name);
+  const data      = byDoc.map(d => d.cost);
+  const barColor  = currentPtype !== 'ALL'
+    ? PTTYPE_COLORS[currentPtype]
+    : '#2563eb';
+  const barColors = data.map((_, i) => {
+    const alpha = 1 - i * 0.03;
+    return barColor + Math.round(alpha * 255).toString(16).padStart(2, '0');
+  });
+
+  // Update header tags
+  const ptTag  = document.getElementById('t1-3b-pt-tag');
+  const dtTag  = document.getElementById('t1-3b-dt-tag');
+  const depTag = document.getElementById('t1-3b-dep-tag');
+  if (currentPtype !== 'ALL') {
+    ptTag.textContent  = PTTYPE_LABEL[currentPtype] || currentPtype;
+    ptTag.className    = `active-filter-tag ${PTTYPE_TAG_CLASS[currentPtype] || 'af-all'}`;
+    ptTag.style.display = 'inline-flex';
+  } else { ptTag.style.display = 'none'; }
+  if (currentDrugtype !== 'ALL') {
+    dtTag.textContent  = currentDrugtype === 'ED' ? 'ED ในบัญชี' : 'NED นอกบัญชี';
+    dtTag.className    = `active-filter-tag ${currentDrugtype === 'ED' ? 'af-ed' : 'af-ned'}`;
+    dtTag.style.display = 'inline-flex';
+  } else { dtTag.style.display = 'none'; }
+  if (currentDep !== 'ALL') {
+    depTag.textContent  = currentDep;
+    depTag.style.display = 'inline-flex';
+  } else { depTag.style.display = 'none'; }
+
+  if (chartBar) {
+    chartBar.data.labels                       = labels;
+    chartBar.data.datasets[0].data             = data;
+    chartBar.data.datasets[0].backgroundColor  = barColors;
+    chartBar.options.plugins.title.text        = `Top ${data.length} แพทย์`;
+    chartBar.update();
+    return;
+  }
+
+  chartBar = new Chart(document.getElementById('t1-3b-bar'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'มูลค่ายา (บาท)',
+        data,
+        backgroundColor: barColors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${fmtTHB(ctx.parsed.x)} บาท`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#f1f5f9' },
+          ticks: {
+            font: { family: 'Sarabun', size: 11 },
+            callback: v => fmtShort(v),
+          }
+        },
+        y: {
+          ticks: {
+            font: { family: 'Sarabun', size: 12 },
+            color: '#374151',
+            callback(val) {
+              const s = this.getLabelForValue(val);
+              return s.length > 22 ? s.slice(0, 21) + '…' : s;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/** T1-4: Top 20 Table */
+function updateTable() {
+  const rows    = getFiltered(currentDep, currentPtype, currentDrugtype);
+  const byDoc   = aggregateCostByDoctor(rows).slice(0, 20);
+  const maxCost = byDoc[0]?.cost || 1;
+
+  // Update header tags
+  const ptTag  = document.getElementById('t1-4-pt-tag');
+  const dtTag  = document.getElementById('t1-4-dt-tag');
+  const depTag = document.getElementById('t1-4-dep-tag');
+  if (currentPtype !== 'ALL') {
+    ptTag.textContent  = PTTYPE_LABEL[currentPtype] || currentPtype;
+    ptTag.className    = `active-filter-tag ${PTTYPE_TAG_CLASS[currentPtype] || 'af-all'}`;
+    ptTag.style.display = 'inline-flex';
+  } else { ptTag.style.display = 'none'; }
+  if (currentDrugtype !== 'ALL') {
+    dtTag.textContent  = currentDrugtype === 'ED' ? 'ED ในบัญชี' : 'NED นอกบัญชี';
+    dtTag.className    = `active-filter-tag ${currentDrugtype === 'ED' ? 'af-ed' : 'af-ned'}`;
+    dtTag.style.display = 'inline-flex';
+  } else { dtTag.style.display = 'none'; }
+  if (currentDep !== 'ALL') {
+    depTag.textContent  = currentDep;
+    depTag.style.display = 'inline-flex';
+  } else { depTag.style.display = 'none'; }
+
+  const barColor = currentPtype !== 'ALL'
+    ? PTTYPE_COLORS[currentPtype]
+    : '#2563eb';
+
+  const tbody = document.getElementById('t1-4-tbody');
+  if (byDoc.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = byDoc.map((d, i) => {
+    const rank    = i + 1;
+    const pct     = (d.cost / maxCost * 100).toFixed(1);
+    const rankCls = rank <= 3 ? 'rank top3' : 'rank';
+    const medal   = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    return `<tr>
+      <td class="${rankCls}">${medal}</td>
+      <td class="doctor-name">${escHtml(d.name)}</td>
+      <td class="cost-val">${fmtTHB(d.cost)}</td>
+      <td class="cost-short">${fmtShort(d.cost)}</td>
+      <td class="pct-bar-wrap">
+        <div class="pct-bar-bg">
+          <div class="pct-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Update all sections */
+function updateAll() {
+  updateKPIs();
+  updateDonut();
+  updateBar();
+  updateTable();
+}
+
+// ════════════════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════════════════
+
+// Global dep filter
+document.querySelectorAll('#global-filter .btn-filter').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('#global-filter .btn-filter').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentDep = this.dataset.dep;
+    updateAll();
+    populateDoctorDropdown();
+    if (document.getElementById('page-t2').style.display !== 'none') updateT2();
+  });
+});
+
+// T1-2: KPI card click → pttype filter, reset drugtype
+document.querySelectorAll('.kpi-card').forEach(card => {
+  card.addEventListener('click', function () {
+    document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.kpi-sub-card').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    currentPtype    = this.dataset.pttype;
+    currentDrugtype = 'ALL';
+    updateBar();
+    updateTable();
+    updateDonut();
+  });
+});
+
+// T1-2: Sub-card click → pttype + drugtype filter
+document.querySelectorAll('.kpi-sub-card').forEach(card => {
+  card.addEventListener('click', function (e) {
+    e.stopPropagation();
+    document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.kpi-sub-card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`kpi-card-${this.dataset.pttype}`).classList.add('active');
+    this.classList.add('active');
+    currentPtype    = this.dataset.pttype;
+    currentDrugtype = this.dataset.drugtype;
+    updateBar();
+    updateTable();
+    updateDonut();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ════════════════════════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.getElementById('page-t1').style.display = tab === 'page-t1' ? '' : 'none';
+    document.getElementById('page-t2').style.display = tab === 'page-t2' ? '' : 'none';
+    if (tab === 'page-t2') updateT2();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════
+// T2 FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+function getFilteredT2() {
+  return rawData.filter(r => {
+    if (currentDep !== 'ALL' && r[C_DEP] !== currentDep) return false;
+    if (t2Pttype !== 'ALL' && r[C_PTTYPE] !== t2Pttype) return false;
+    if (t2Drugtype === 'ED'  && !isED(r))  return false;
+    if (t2Drugtype === 'NED' && !isNED(r)) return false;
+    if (t2Doctor !== 'ALL' && (r[C_DOCTOR] || '').trim() !== t2Doctor) return false;
+    return true;
+  });
+}
+
+function populateDoctorDropdown() {
+  const rows  = rawData.filter(r => {
+    if (currentDep !== 'ALL' && r[C_DEP] !== currentDep) return false;
+    if (t2Pttype !== 'ALL' && r[C_PTTYPE] !== t2Pttype) return false;
+    if (t2Drugtype === 'ED'  && !isED(r))  return false;
+    if (t2Drugtype === 'NED' && !isNED(r)) return false;
+    return true;
+  });
+  const byDoc  = aggregateCostByDoctor(rows); // sorted DESC
+  const sel    = document.getElementById('t2-f4-select');
+  const prev   = sel.value;
+
+  sel.innerHTML = '<option value="ALL">— ทุกแพทย์ —</option>' +
+    byDoc.map(d =>
+      `<option value="${escHtml(d.name)}">${escHtml(d.name)} (${fmtShort(d.cost)})</option>`
+    ).join('');
+
+  // Restore previous selection if still valid
+  if ([...sel.options].some(o => o.value === prev)) {
+    sel.value = prev;
+    t2Doctor  = prev;
+  } else {
+    sel.value = 'ALL';
+    t2Doctor  = 'ALL';
+  }
+}
+
+function updateT2() {
+  const rows     = getFilteredT2();
+  const edRows   = rows.filter(r => isED(r));
+  const nedRows  = rows.filter(r => isNED(r));
+  const total    = aggregateCost(rows);
+  const edCost   = aggregateCost(edRows);
+  const nedCost  = aggregateCost(nedRows);
+
+  // ── D1: doctor banner ──
+  document.getElementById('t2-d1-name').textContent =
+    t2Doctor === 'ALL' ? 'ทุกแพทย์' : t2Doctor;
+  document.getElementById('t2-d1-rows').textContent =
+    `${rows.length.toLocaleString()} รายการ`;
+
+  // ── D3: total cost + ED/NED breakdown ──
+  document.getElementById('t2-d3-value').innerHTML =
+    fmtTHB(total) + '<span class="total-unit"> บาท</span>';
+  document.getElementById('t2-d3-sub').textContent =
+    `${rows.length.toLocaleString()} รายการยา`;
+  document.getElementById('t2-d3-ed').textContent  = fmtTHB(edCost);
+  document.getElementById('t2-d3-ned').textContent = fmtTHB(nedCost);
+
+  // ── D2: donut ED / NED ──
+  const donutData   = [edCost, nedCost];
+  const donutLabels = ['ED ยาในบัญชี', 'NED ยานอกบัญชี'];
+  const donutColors = ['#16a34a', '#f59e0b'];
+  if (chartT2Donut) {
+    chartT2Donut.data.datasets[0].data = donutData;
+    chartT2Donut.update();
+  } else {
+    chartT2Donut = new Chart(document.getElementById('t2-d2-donut'), {
+      type: 'doughnut',
+      data: {
+        labels: donutLabels,
+        datasets: [{
+          data: donutData,
+          backgroundColor: donutColors,
+          borderWidth: 3,
+          borderColor: '#fff',
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { family: 'Sarabun', size: 12 },
+              padding: 12,
+              usePointStyle: true,
+              pointStyleWidth: 10,
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label(ctx) {
+                const t   = donutData.reduce((s, v) => s + v, 0);
+                const pct = t > 0 ? (ctx.parsed / t * 100).toFixed(1) : '0';
+                return ` ${ctx.label}: ${fmtTHB(ctx.parsed)} บาท (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── D4: top 20 drugs ──
+  const drugMap = {};
+  rows.forEach(r => {
+    const drug = (r[C_DRUG] || '').trim();
+    if (!drug) return;
+    const cost = parseCost(r[C_COST]);
+    const qty  = parseFloat(String(r[C_QTY] || '').replace(/,/g, '')) || 0;
+    const type = isED(r) ? 'ED' : 'NED';
+    if (!drugMap[drug]) drugMap[drug] = { cost: 0, qty: 0, type };
+    drugMap[drug].cost += cost;
+    drugMap[drug].qty  += qty;
+  });
+
+  const topDrugs = Object.entries(drugMap)
+    .map(([name, d]) => ({ name, ...d }))
+    .sort((a, b) => b.cost - a.cost)
+    .slice(0, 20);
+
+  const maxDrugCost = topDrugs[0]?.cost || 1;
+  const tbody = document.getElementById('t2-d4-tbody');
+
+  if (topDrugs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">ไม่พบข้อมูล</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = topDrugs.map((d, i) => {
+    const rank     = i + 1;
+    const pct      = (d.cost / maxDrugCost * 100).toFixed(1);
+    const pctTotal = total > 0 ? (d.cost / total * 100).toFixed(1) : '0.0';
+    const rankMark = rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : rank;
+    const rankCls  = rank <= 3 ? 'rank top3' : 'rank';
+    const badge    = d.type === 'ED'
+      ? '<span style="background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">ED</span>'
+      : '<span style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">NED</span>';
+    return `<tr style="border-bottom:1px solid #f1f5f9;">
+      <td class="${rankCls}" style="text-align:center;padding:8px 10px;color:${rank<=3?'#f59e0b':'#cbd5e1'};font-weight:700;font-size:.75rem;">${rankMark}</td>
+      <td style="padding:8px 14px;color:#1e293b;">${escHtml(d.name)}</td>
+      <td style="padding:8px 10px;text-align:center;">${badge}</td>
+      <td style="padding:8px 14px;text-align:right;font-variant-numeric:tabular-nums;color:#374151;">${d.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</td>
+      <td style="padding:8px 14px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#0f172a;">${fmtTHB(d.cost)}</td>
+      <td style="padding:8px 14px;width:90px;">
+        <div style="font-size:.72rem;color:#64748b;margin-bottom:2px;">${pctTotal}%</div>
+        <div style="background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:#2563eb;border-radius:4px;"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── T2 filter events ──
+document.querySelectorAll('[data-pt2]').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('[data-pt2]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    t2Pttype = this.dataset.pt2;
+    populateDoctorDropdown();
+    updateT2();
+  });
+});
+
+document.querySelectorAll('[data-dt2]').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('[data-dt2]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    t2Drugtype = this.dataset.dt2;
+    populateDoctorDropdown();
+    updateT2();
+  });
+});
+
+document.getElementById('t2-f4-select').addEventListener('change', function () {
+  t2Doctor = this.value;
+  updateT2();
+});
+
+// ════════════════════════════════════════════════════════════════
+// LOAD DATA
+// ════════════════════════════════════════════════════════════════
+// ── Progress elements ──
+const loadingDetail = document.getElementById('loading-detail');
+const debugBar      = document.getElementById('debug-bar');
+
+async function loadAndParse() {
+  try {
+    debugBar.textContent = '🟡 กำลังโหลดไฟล์ข้อมูล...';
+    loadingDetail.textContent = 'เริ่มต้นโหลด...';
+
+    const response = await fetch(DATA_FILE);
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${DATA_FILE}`);
+
+    const total  = parseInt(response.headers.get('Content-Length') || '0');
+    const reader = response.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.length;
+      const pct = total ? Math.round(loaded / total * 100) : '?';
+      loadingDetail.textContent =
+        `⬇️ โหลด ${(loaded / 1e6).toFixed(1)} MB${total ? ' / ' + (total/1e6).toFixed(0) + ' MB  (' + pct + '%)' : ''}`;
+      debugBar.textContent =
+        `⬇️ ${(loaded / 1e6).toFixed(1)} MB${total ? ' / ' + (total/1e6).toFixed(0) + ' MB  (' + pct + '%)' : ''}`;
+    }
+
+    debugBar.textContent = '🟠 กำลัง parse ข้อมูล...';
+    loadingDetail.textContent = 'กำลัง parse ข้อมูล กรุณารอสักครู่...';
+
+    // Decode bytes → text
+    const blob = new Blob(chunks);
+    const text = await blob.text();
+
+    // Parse CSV
+    const result = Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true,
+    });
+    rawData = result.data;
+
+    // Header info
+    document.getElementById('t1-0-date').textContent = DATE_RANGE;
+    document.getElementById('t1-0-rows').textContent =
+      `ข้อมูล ${rawData.length.toLocaleString()} รายการ`;
+
+    // Hide loading, show dashboard
+    debugBar.remove();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('dashboard-content').style.display = '';
+
+    updateAll();
+    populateDoctorDropdown();
+
+  } catch (err) {
+    debugBar.style.background = '#dc2626';
+    debugBar.textContent      = '❌ ' + err.message;
+    document.getElementById('loading').innerHTML = `
+      <div style="color:#dc2626;text-align:center;padding:40px;">
+        <div style="font-size:2rem;">⚠️</div>
+        <div style="font-weight:600;margin:8px 0;">โหลดไฟล์ไม่ได้</div>
+        <div style="font-size:.85rem;color:#6b7280;">${err.message}</div>
+      </div>`;
+  }
+}
+
+loadAndParse();
+</script>
+</body>
+</html>
