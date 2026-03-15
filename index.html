@@ -694,7 +694,7 @@
     <div id="t2-d4" class="chart-card">
       <div class="chart-card-header">
         <span class="section-id">T2-D4</span>
-        <span id="t2-d4-title">Top 20 ยามูลค่าสูงสุด</span>
+        <span id="t2-d4-title">Top 100 ยามูลค่าสูงสุด</span>
       </div>
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
@@ -1283,7 +1283,7 @@ function updateT2() {
   const topDrugs = Object.entries(drugMap)
     .map(([name, d]) => ({ name, ...d }))
     .sort((a, b) => b.cost - a.cost)
-    .slice(0, 20);
+    .slice(0, 100);
 
   const maxDrugCost = topDrugs[0]?.cost || 1;
   const tbody = document.getElementById('t2-d4-tbody');
