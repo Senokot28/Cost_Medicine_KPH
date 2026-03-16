@@ -918,7 +918,8 @@ function updateDonut() {
         tooltip: {
           callbacks: {
             label(ctx) {
-              const pct = total > 0 ? (ctx.parsed / total * 100).toFixed(1) : '0';
+              const t   = ctx.chart.data.datasets[0].data.reduce((s, v) => s + v, 0);
+              const pct = t > 0 ? (ctx.parsed / t * 100).toFixed(1) : '0';
               return ` ${ctx.label}: ${fmtTHB(ctx.parsed)} บาท (${pct}%)`;
             }
           }
@@ -1256,7 +1257,7 @@ function updateT2() {
           tooltip: {
             callbacks: {
               label(ctx) {
-                const t   = donutData.reduce((s, v) => s + v, 0);
+                const t   = ctx.chart.data.datasets[0].data.reduce((s, v) => s + v, 0);
                 const pct = t > 0 ? (ctx.parsed / t * 100).toFixed(1) : '0';
                 return ` ${ctx.label}: ${fmtTHB(ctx.parsed)} บาท (${pct}%)`;
               }
