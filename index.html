@@ -78,6 +78,25 @@
       color: #fff;
       box-shadow: 0 2px 6px rgba(37,99,235,.35);
     }
+    .d4-mode-btn {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 16px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+      transition: all .15s;
+      outline: none;
+    }
+    .d4-mode-btn:hover { border-color: #2563eb; color: #2563eb; }
+    .d4-mode-btn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(37,99,235,.35);
+    }
     .filter-summary {
       margin-left: auto;
       font-size: 0.78rem;
@@ -690,15 +709,20 @@
 
     </div><!-- /#t2-d2d3 -->
 
-    <!-- T2-D4: Top 20 drugs -->
+    <!-- T2-D4: Top 100 drugs -->
     <div id="t2-d4" class="chart-card">
       <div class="chart-card-header">
         <span class="section-id">T2-D4</span>
-        <span id="t2-d4-title">Top 100 ยามูลค่าสูงสุด</span>
+        <span id="t2-d4-title">Top 100 ยา</span>
+      </div>
+      <div style="padding:8px 14px 6px;display:flex;gap:6px;flex-wrap:wrap;">
+        <button data-d4mode="cost"              class="d4-mode-btn active">Top 100 ยามูลค่าสูงสุด</button>
+        <button data-d4mode="unitprice_filtered" class="d4-mode-btn">Top 100 มูลค่าต่อหน่วย (มูลค่ารวม &gt; 5 แสน)</button>
+        <button data-d4mode="unitprice"          class="d4-mode-btn">Top 100 มูลค่าต่อหน่วย</button>
       </div>
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
-          <thead>
+          <thead id="t2-d4-thead">
             <tr style="background:#f8fafc;">
               <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:center;width:36px;">#</th>
               <th style="padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;">ชื่อยา</th>
@@ -763,6 +787,7 @@ let chartBar        = null;
 let t2Pttype    = 'ALL';
 let t2Drugtype  = 'ALL';
 let t2Doctor    = 'ALL';
+let t2D4Mode    = 'cost'; // 'cost' | 'unitprice' | 'unitprice_filtered'
 let chartT2Donut = null;
 
 // ════════════════════════════════════════════════════════════════
@@ -1268,7 +1293,7 @@ function updateT2() {
     });
   }
 
-  // ── D4: top 20 drugs ──
+  // ── D4: top 100 drugs (3 modes) ──
   const drugMap = {};
   rows.forEach(r => {
     const drug = (r[C_DRUG] || '').trim();
@@ -1281,42 +1306,93 @@ function updateT2() {
     drugMap[drug].qty  += qty;
   });
 
-  const topDrugs = Object.entries(drugMap)
-    .map(([name, d]) => ({ name, ...d }))
-    .sort((a, b) => b.cost - a.cost)
-    .slice(0, 100);
+  const allDrugs = Object.entries(drugMap)
+    .map(([name, d]) => ({ name, ...d, unitPrice: d.qty > 0 ? d.cost / d.qty : 0 }));
 
-  const maxDrugCost = topDrugs[0]?.cost || 1;
-  const tbody = document.getElementById('t2-d4-tbody');
+  const tbody  = document.getElementById('t2-d4-tbody');
+  const thead  = document.getElementById('t2-d4-thead');
+  const thBase = 'padding:9px 14px;font-weight:600;font-size:.76rem;color:#64748b;border-bottom:1px solid #e2e8f0;';
 
-  if (topDrugs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">ไม่พบข้อมูล</td></tr>';
-    return;
-  }
+  if (t2D4Mode === 'cost') {
+    // ── Mode 1: sort by total cost DESC ──
+    const topDrugs = allDrugs.sort((a, b) => b.cost - a.cost).slice(0, 100);
+    const maxDrugCost = topDrugs[0]?.cost || 1;
 
-  tbody.innerHTML = topDrugs.map((d, i) => {
-    const rank     = i + 1;
-    const pct      = (d.cost / maxDrugCost * 100).toFixed(1);
-    const pctTotal = total > 0 ? (d.cost / total * 100).toFixed(1) : '0.0';
-    const rankMark = rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : rank;
-    const rankCls  = rank <= 3 ? 'rank top3' : 'rank';
-    const badge    = d.type === 'ED'
-      ? '<span style="background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">ED</span>'
-      : '<span style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">NED</span>';
-    return `<tr style="border-bottom:1px solid #f1f5f9;">
-      <td class="${rankCls}" style="text-align:center;padding:8px 10px;color:${rank<=3?'#f59e0b':'#cbd5e1'};font-weight:700;font-size:.75rem;">${rankMark}</td>
-      <td style="padding:8px 14px;color:#1e293b;">${escHtml(d.name)}</td>
-      <td style="padding:8px 10px;text-align:center;">${badge}</td>
-      <td style="padding:8px 14px;text-align:right;font-variant-numeric:tabular-nums;color:#374151;">${d.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</td>
-      <td style="padding:8px 14px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#0f172a;">${fmtTHB(d.cost)}</td>
-      <td style="padding:8px 14px;width:90px;">
-        <div style="font-size:.72rem;color:#64748b;margin-bottom:2px;">${pctTotal}%</div>
-        <div style="background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:#2563eb;border-radius:4px;"></div>
-        </div>
-      </td>
+    thead.innerHTML = `<tr style="background:#f8fafc;">
+      <th style="${thBase}text-align:center;width:36px;">#</th>
+      <th style="${thBase}">ชื่อยา</th>
+      <th style="${thBase}text-align:center;width:60px;">ED/NED</th>
+      <th style="${thBase}text-align:right;">จำนวน</th>
+      <th style="${thBase}text-align:right;">มูลค่า (บาท)</th>
+      <th style="${thBase}width:90px;">%</th>
     </tr>`;
-  }).join('');
+
+    if (topDrugs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">ไม่พบข้อมูล</td></tr>';
+      return;
+    }
+    tbody.innerHTML = topDrugs.map((d, i) => {
+      const rank     = i + 1;
+      const pct      = (d.cost / maxDrugCost * 100).toFixed(1);
+      const pctTotal = total > 0 ? (d.cost / total * 100).toFixed(1) : '0.0';
+      const rankMark = rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : rank;
+      const rankCls  = rank <= 3 ? 'rank top3' : 'rank';
+      const badge    = d.type === 'ED'
+        ? '<span style="background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">ED</span>'
+        : '<span style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">NED</span>';
+      return `<tr style="border-bottom:1px solid #f1f5f9;">
+        <td class="${rankCls}" style="text-align:center;padding:8px 10px;color:${rank<=3?'#f59e0b':'#cbd5e1'};font-weight:700;font-size:.75rem;">${rankMark}</td>
+        <td style="padding:8px 14px;color:#1e293b;">${escHtml(d.name)}</td>
+        <td style="padding:8px 10px;text-align:center;">${badge}</td>
+        <td style="padding:8px 14px;text-align:right;font-variant-numeric:tabular-nums;color:#374151;">${d.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</td>
+        <td style="padding:8px 14px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#0f172a;">${fmtTHB(d.cost)}</td>
+        <td style="padding:8px 14px;width:90px;">
+          <div style="font-size:.72rem;color:#64748b;margin-bottom:2px;">${pctTotal}%</div>
+          <div style="background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:#2563eb;border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+  } else {
+    // ── Mode 2 & 3: sort by unit price DESC ──
+    let filtered = allDrugs;
+    if (t2D4Mode === 'unitprice_filtered') {
+      filtered = allDrugs.filter(d => d.cost > 500000);
+    }
+    const topDrugs = filtered.sort((a, b) => b.unitPrice - a.unitPrice).slice(0, 100);
+
+    thead.innerHTML = `<tr style="background:#f8fafc;">
+      <th style="${thBase}text-align:center;width:36px;">#</th>
+      <th style="${thBase}">ชื่อยา</th>
+      <th style="${thBase}text-align:center;width:60px;">ED/NED</th>
+      <th style="${thBase}text-align:right;">ราคาต่อหน่วย (บาท)</th>
+      <th style="${thBase}text-align:right;">จำนวน</th>
+      <th style="${thBase}text-align:right;">มูลค่ารวม (บาท)</th>
+    </tr>`;
+
+    if (topDrugs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">ไม่พบข้อมูล</td></tr>';
+      return;
+    }
+    tbody.innerHTML = topDrugs.map((d, i) => {
+      const rank     = i + 1;
+      const rankMark = rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : rank;
+      const rankCls  = rank <= 3 ? 'rank top3' : 'rank';
+      const badge    = d.type === 'ED'
+        ? '<span style="background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">ED</span>'
+        : '<span style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">NED</span>';
+      return `<tr style="border-bottom:1px solid #f1f5f9;">
+        <td class="${rankCls}" style="text-align:center;padding:8px 10px;color:${rank<=3?'#f59e0b':'#cbd5e1'};font-weight:700;font-size:.75rem;">${rankMark}</td>
+        <td style="padding:8px 14px;color:#1e293b;">${escHtml(d.name)}</td>
+        <td style="padding:8px 10px;text-align:center;">${badge}</td>
+        <td style="padding:8px 14px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#dc2626;">${fmtTHB(d.unitPrice)}</td>
+        <td style="padding:8px 14px;text-align:right;font-variant-numeric:tabular-nums;color:#374151;">${d.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</td>
+        <td style="padding:8px 14px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#0f172a;">${fmtTHB(d.cost)}</td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 // ── T2 filter events ──
@@ -1343,6 +1419,15 @@ document.querySelectorAll('[data-dt2]').forEach(btn => {
 document.getElementById('t2-f4-select').addEventListener('change', function () {
   t2Doctor = this.value;
   updateT2();
+});
+
+document.querySelectorAll('[data-d4mode]').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('[data-d4mode]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    t2D4Mode = this.dataset.d4mode;
+    updateT2();
+  });
 });
 
 // ════════════════════════════════════════════════════════════════
